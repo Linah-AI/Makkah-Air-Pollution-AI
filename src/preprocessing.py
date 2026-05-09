@@ -5,6 +5,10 @@ def load_and_clean_data(file_path):
 
     # قراءة ملف الإكسل
     df = pd.read_excel(file_path)
+    
+    # معرفة الأسماء الحقيقية
+    print("📌 أسماء الأعمدة في ملف الإكسل هي:")
+    print(df.columns)
 
     # حذف القيم الفارغة
     df = df.dropna()
