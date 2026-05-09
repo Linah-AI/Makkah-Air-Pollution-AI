@@ -1,15 +1,20 @@
-from src import preprocessing, training, evaluation
+from src import preprocessing, training
+# from src import evaluation  <-- حطينا هاشتاج عشان نعطل خديجة مؤقتاً
 
 def main():
-    # 1. تنظيف البيانات (سلام)
-    data_path = "data/makkah_pollution.csv"
+    print("🚀 بدء تشغيل النظام...")
+
+    # 1. تنظيف البيانات (شغل سلام)
+    data_path = "data/makkah_pollution.xlsx"
     clean_df = preprocessing.load_and_clean_data(data_path)
+    print("✅ تم تنظيف البيانات بنجاح!")
     
-    # 2. تدريب النموذج (دانة)
-    # model, x_test, y_test = training.train_model(clean_df)
+    # 2. تدريب النموذج (شغل دانة)
+    model, X_test, y_test = training.train_model(clean_df)
+    print("✅ تم تدريب المودل ومستعد للتقييم!")
     
-    # 3. التقييم (خديجة)
-    # evaluation.evaluate_performance(model, x_test, y_test)
+    # 3. التقييم (شغل خديجة - معطل مؤقتاً)
+    # evaluation.evaluate_performance(model, X_test, y_test)
 
 if __name__ == "__main__":
     main()
