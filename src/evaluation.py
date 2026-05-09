@@ -7,16 +7,20 @@ Evaluation Pipeline for Air Pollution Risk Classification
  الملف: src/evaluation.py
 """
 
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    classification_report,
-    confusion_matrix
-)
-import matplotlib.pyplot as plt
-import seaborn as sns
+try:
+    import sklearn.metrics
+    from sklearn.metrics import (
+        accuracy_score,
+        precision_score,
+        recall_score,
+        f1_score,
+        classification_report,
+        confusion_matrix
+    )
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+except ImportError as e:
+    raise ImportError(f"Required packages not found. Please install: scikit-learn, matplotlib, seaborn. Error: {e}")
 
 
 def calculate_metrics(y_true, y_pred, labels=None):
@@ -62,8 +66,8 @@ def print_classification_report(y_true, y_pred, labels=None):
     تطبع تقرير مفصل لكل فئة على حدة
     """
     
-    if labels is None:
-        labels = ['Low', 'Medium', 'High']
+    # الحصول على الفئات الفعلية من البيانات
+    unique_labels = sorted(list(set(list(y_true) + list(y_pred))))
     
     print("\n" + "=" * 60)
     print("📋 CLASSIFICATION REPORT")
@@ -72,7 +76,7 @@ def print_classification_report(y_true, y_pred, labels=None):
     report = classification_report(
         y_true, 
         y_pred, 
-        target_names=labels,
+        labels=unique_labels,
         digits=4
     )
     print(report)
@@ -85,10 +89,10 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
     ترسم مصفوفة الالتباس (Confusion Matrix)
     """
     
-    if labels is None:
-        labels = ['Low', 'Medium', 'High']
+    # الحصول على الفئات الفعلية من البيانات
+    unique_labels = sorted(list(set(list(y_true) + list(y_pred))))
     
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
+    cm = confusion_matrix(y_true, y_pred, labels=unique_labels)
     
     plt.figure(figsize=(8, 6))
     sns.heatmap(
@@ -96,8 +100,8 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
         annot=True,
         fmt='d',
         cmap='Blues',
-        xticklabels=labels,
-        yticklabels=labels,
+        xticklabels=unique_labels,
+        yticklabels=unique_labels,
         cbar_kws={'label': 'Count'}
     )
     
@@ -114,6 +118,44 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
     plt.show()
     
     return cm
+
+
+def evaluate_performance(model, X_test, y_test, labels=None):
+    """
+    الدالة الرئيسية للتقييم - تقيم أداء النموذج بشكل كامل
+    
+    Parameters:
+        model: النموذج المدرب
+        X_test: بيانات الاختبار (Features)
+        y_test: القيم الحقيقية (Target)
+        labels: اسماء الفئات (اختياري)
+    """
+    
+    if labels is None:
+        labels = ['Low', 'Medium', 'High']
+    
+    # التنبؤ على بيانات الاختبار
+    y_pred = model.predict(X_test)
+    
+    # حساب المقاييس
+    metrics = calculate_metrics(y_test, y_pred, labels)
+    
+    print("\n" + "=" * 60)
+    print("📊 MODEL PERFORMANCE METRICS")
+    print("=" * 60)
+    print(f"🎯 Accuracy:  {metrics['accuracy']}")
+    print(f"📈 Precision: {metrics['precision']}")
+    print(f"📍 Recall:    {metrics['recall']}")
+    print(f"⚖️  F1-Score:  {metrics['f1_score']}")
+    print("=" * 60)
+    
+    # تقرير مفصل
+    print_classification_report(y_test, y_pred, labels)
+    
+    # مصفوفة الالتباس
+    plot_confusion_matrix(y_test, y_pred, labels, save_path='confusion_matrix.png')
+    
+    return metrics
 
 
 # ============================================================

@@ -1,5 +1,4 @@
-from src import preprocessing, training
-# from src import evaluation  <-- حطينا هاشتاج عشان نعطل خديجة مؤقتاً
+from src import preprocessing, training, evaluation
 
 def main():
     print("🚀 بدء تشغيل النظام...")
@@ -13,8 +12,8 @@ def main():
     model, X_test, y_test = training.train_model(clean_df)
     print("✅ تم تدريب المودل ومستعد للتقييم!")
     
-    # 3. التقييم (شغل خديجة - معطل مؤقتاً)
-    # evaluation.evaluate_performance(model, X_test, y_test)
+    # 3. التقييم (شغل خديجة)
+    evaluation.evaluate_performance(model, X_test, y_test)
 
 if __name__ == "__main__":
     main()
