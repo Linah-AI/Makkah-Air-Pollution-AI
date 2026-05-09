@@ -1,37 +1,31 @@
-import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
-# قراءة البيانات
-df = pd.read_excel("makkah_pollution.xlsx")
-
-
 def train_model(df):
-    # تحويل النصوص إلى أرقام
+    # 1. تحويل النصوص إلى أرقام (التشفير)
     le_pollution = LabelEncoder()
-    le_suffering = LabelEncoder()
-
+    
+    # نحول أسماء التلوث لأرقام عشان تفهمها الشجرة
     df["أنواع التلوث الهوائي"] = le_pollution.fit_transform(df["أنواع التلوث الهوائي"])
-    df["عانت من التلوث"] = le_suffering.fit_transform(df["عانت من التلوث"])
 
-    # Features
-    X = df[["السنة", "أنواع التلوث الهوائي", "التوزيع النسبي"]]
+    # 2. تحديد المدخلات (Features) والمخرجات (Target)
+    # المدخلات: السنة ونوع التلوث
+    X = df[["السنة", "أنواع التلوث الهوائي"]]
+    
+    # المخرجات: عمود الخطر اللي صنعته سلام
+    y = df["Risk"]
 
-    # Target
-    y = df["عانت من التلوث"]
-
-    # تقسيم البيانات
+    # 3. تقسيم البيانات (80% تدريب و 20% اختبار)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
-    # إنشاء الموديل
-    model = DecisionTreeClassifier()
-
-    # تدريب الموديل
+    # 4. إنشاء الموديل وتدريبه
+    model = DecisionTreeClassifier(random_state=42)
     model.fit(X_train, y_train)
 
-    print("Model Trained Successfully")
+    print("✅ Decision Tree Model Trained Successfully!")
 
+    # 5. إرجاع الموديل وبيانات الاختبار عشان تستخدمها خديجة
     return model, X_test, y_test
