@@ -1,35 +1,35 @@
 import pandas as pd
 
-
 def load_and_clean_data(file_path):
-
-    # قراءة ملف الإكسل
+    """
+    Loads dataset, handles missing values, and categorizes risk levels.
+    """
+    # Load Excel file
     df = pd.read_excel(file_path)
     
-    # معرفة الأسماء الحقيقية
-    print("📌 أسماء الأعمدة في ملف الإكسل هي:")
-    print(df.columns)
+    # Print dataset columns for verification
+    print("Dataset columns:")
+    print(df.columns.tolist())
 
-    # حذف القيم الفارغة
+    # Drop rows with missing values
     df = df.dropna()
 
-# حذف الصفوف التي تحتوي "لا يعاني"
+    # Filter out records where the respondent did not suffer from pollution
+    # Note: Arabic strings are maintained here to match the dataset schema.
     df = df[df["عانت من التلوث"] != "لا يعاني"]
 
-    # دالة تصنيف مستوى الخطورة
     def classify_risk(value):
-
+        """
+        Classifies numerical distribution into risk categories.
+        """
         if value >= 10:
             return "High"
-
         elif value >= 5:
             return "Medium"
-
         else:
             return "Low"
 
-    # إنشاء عمود Risk بناءً على النسبة
+    # Create target variable 'Risk' based on relative distribution
     df["Risk"] = df["التوزيع النسبي"].apply(classify_risk)
 
-    # إرجاع البيانات بعد التنظيف
     return df

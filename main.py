@@ -3,30 +3,30 @@ from sklearn.tree import plot_tree
 from src import preprocessing, training, evaluation
 
 def main():
-    print("🚀 بدء تشغيل نظام التنبؤ بتلوث الهواء في مكة...")
-    print("-" * 50)
+    print("Starting Makkah Air Pollution Risk Classification Pipeline...")
+    print("-" * 60)
 
-    # 1. مرحلة تنظيف البيانات
+    # 1. Data Preprocessing Phase
     # ---------------------------------
     data_path = "data/makkah_pollution.xlsx"
     clean_df = preprocessing.load_and_clean_data(data_path)
     
-    print("✅ تم تنظيف البيانات بنجاح!")
-    print("\n📊 عينة من الجداول اللي نظفتها سلام (أول 5 صفوف):")
+    print("Data preprocessing completed.")
+    print("\nSample of the cleaned dataset (first 5 rows):")
     print(clean_df.head())
-    print("-" * 50)
+    print("-" * 60)
 
-    # 2. مرحلة تدريب النموذج
+    # 2. Model Training Phase
     # ---------------------------------
-    model, X_test, y_test = training.train_model(clean_df)
-    print("✅ تم تدريب المودل (الذكاء الاصطناعي) بنجاح!")
-    print(f"🧠 المودل الآن خبير وعنده {model.get_n_leaves()} قاعدة استنتاجية.")
-    print("-" * 50)
+    model, X, y = training.train_model(clean_df)
+    print(f"Model configured with {model.get_n_leaves()} decision leaves.")
+    print("-" * 60)
 
-    # 3. مرحلة الاستعراض البصري
+    # 3. Model Visualization Phase
     # ---------------------------------
-    print("🌳 جاري رسم شجرة القرار (Decision Tree)...")
-    feature_names = X_test.columns.tolist() if hasattr(X_test, "columns") else ["السنة", "أنواع التلوث الهوائي"]
+    print("Generating Decision Tree visualization...")
+    feature_names = X.columns.tolist() if hasattr(X, "columns") else ["Year", "Pollution Type"]
+    
     plt.figure(figsize=(20, 10))
     plot_tree(
         model,
@@ -36,30 +36,18 @@ def main():
         rounded=True,
         fontsize=10,
     )
-    plt.title("Makkah Pollution Decision Tree Model")
-    print("💡 ستفتح الآن نافذة جديدة تحتوي على رسمة الشجرة.. أغلقيها للاستمرار.")
+    plt.title("Makkah Pollution Decision Tree Structure")
+    print("Note: Close the Decision Tree window to proceed to the evaluation phase.")
     plt.show()
 
-    # 4. مرحلة التقييم
-    # ----------------------------
-    print("📈 جاري التقييم ورسم النتائج (شغل خديجة)...")
-    
-    # أولاً: نخلي المودل يحل الاختبار عشان نرسل إجاباته لخديجة
-    y_pred = model.predict(X_test)
-    
-    # ثانياً: نستخدم دوال خديجة الاحترافية
-    # 1. طباعة الدقة وباقي المقاييس
-    metrics = evaluation.calculate_metrics(y_test, y_pred, labels=model.classes_)
-    print("\n🎯 النتائج النهائية:")
-    for key, value in metrics.items():
-        print(f" - {key.upper()}: {value * 100:.2f}%")
-        
-    # 2. طباعة التقرير المفصل
-    evaluation.print_classification_report(y_test, y_pred, labels=model.classes_)
-    
-    # 3. رسم مصفوفة الالتباس (Confusion Matrix)
-    print("💡 ستفتح الآن نافذة جديدة تحتوي على مصفوفة الالتباس..")
-    evaluation.plot_confusion_matrix(y_test, y_pred, labels=model.classes_)
+    # 4. Evaluation Phase (Cross-Validation)
+    # ---------------------------------
+    print("Initiating Cross-Validation Evaluation...")
+    evaluation.evaluate_with_cv(model, X, y, labels=model.classes_)
+
+    print("\n" + "=" * 60)
+    print("Pipeline execution finished successfully.")
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()

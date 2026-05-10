@@ -1,10 +1,3 @@
-"""
-evaluation.py
-=============
-Evaluation Pipeline for Air Pollution Risk Classification
-Project: Classifying Air Pollution Risk Levels in Makkah
-"""
-
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -13,18 +6,16 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix
 )
+from sklearn.model_selection import cross_val_predict, LeaveOneOut
 import matplotlib.pyplot as plt
 try:
     import seaborn as sns
 except ImportError:
     sns = None
-import pandas as pd
-
 
 def calculate_metrics(y_true, y_pred, labels=None):
     """
     Computes weighted Accuracy, Precision, Recall, and F1-score.
-    Weighted averaging handles class imbalance in pollution risk levels.
     """
     if labels is None:
         labels = sorted(list(set(list(y_true) + list(y_pred))))
@@ -41,42 +32,35 @@ def calculate_metrics(y_true, y_pred, labels=None):
         'f1_score': round(f1, 4)
     }
 
-
 def print_classification_report(y_true, y_pred, labels=None):
     """
-    Prints per-class precision, recall, and F1-score for detailed analysis.
+    Prints per-class metrics for detailed evaluation analysis.
     """
-    
-    # الحصول على الفئات الفعلية من البيانات
     unique_labels = sorted(list(set(list(y_true) + list(y_pred))))
     
     print("\n" + "=" * 60)
-    print("CLASSIFICATION REPORT")
+    print("CLASSIFICATION REPORT (CROSS-VALIDATION)")
     print("=" * 60)
     
     report = classification_report(
         y_true, 
         y_pred, 
         target_names=unique_labels,
-        digits=4
+        labels=unique_labels,
+        digits=4,
+        zero_division=0
     )
     print(report)
-    
     return report
-
 
 def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
     """
     Visualizes prediction accuracy via a confusion matrix heatmap.
-    Diagonal elements represent correct classifications.
     """
-    
-    # الحصول على الفئات الفعلية من البيانات
     unique_labels = sorted(list(set(list(y_true) + list(y_pred))))
-    
     cm = confusion_matrix(y_true, y_pred, labels=unique_labels)
     
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(8, 6))
     if sns is not None:
         sns.heatmap(
             cm,
@@ -87,7 +71,7 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
             yticklabels=unique_labels,
             cbar_kws={'label': 'Count'},
             linewidths=0.5,
-            linecolor='white'
+            linecolor='black'
         )
     else:
         plt.imshow(cm, interpolation='nearest', cmap='Blues')
@@ -98,111 +82,40 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, save_path=None):
         plt.xticks(range(len(unique_labels)), unique_labels)
         plt.yticks(range(len(unique_labels)), unique_labels)
     
-    plt.title('Confusion Matrix - Air Pollution Risk Classification', fontsize=14, fontweight='bold', pad=20)
+    plt.title('Confusion Matrix - Cross Validation', fontsize=14, fontweight='bold', pad=20)
     plt.xlabel('Predicted Label', fontsize=12)
     plt.ylabel('Actual Label', fontsize=12)
-    
     plt.tight_layout()
     
     if save_path:
+        import os
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-        print(f"\nSaved to: {save_path}")
     
     plt.show()
-    
-    return cm
 
-
-def save_results(metrics, filepath='outputs/evaluation_results.csv'):
+def evaluate_with_cv(model, X, y, labels=None):
     """
-    Exports evaluation metrics to CSV for documentation and reproducibility.
+    Evaluates the model using Leave-One-Out Cross Validation.
+    This approach is mathematically robust for extremely small datasets.
     """
-    import os
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    
-    results_df = pd.DataFrame([metrics])
-    results_df['timestamp'] = pd.Timestamp.now()
-    results_df['model'] = 'Decision Tree'
-    results_df['dataset'] = 'Makkah Pollution 2024'
-    
-    results_df.to_csv(filepath, index=False)
-    print(f"\nResults saved to: {filepath}")
-    
-    return results_df
-
-
-def full_evaluation(y_true, y_pred, labels=None, save_path=None):
-    """
-    Executes complete evaluation pipeline: metrics, report, visualization, and export.
-    """
-    print("=" * 60)
-    print("EVALUATION PIPELINE")
-    print("Project: Makkah Air Pollution Risk Classification")
-    print("=" * 60)
-    
-    # Step 1: Metrics
-    print("\n[1/4] Computing metrics...")
-    metrics = calculate_metrics(y_true, y_pred, labels)
-    print(f"   Accuracy:  {metrics['accuracy']}")
-    print(f"   Precision: {metrics['precision']}")
-    print(f"   Recall:    {metrics['recall']}")
-    print(f"   F1-Score:  {metrics['f1_score']}")
-    
-    # Step 2: Report
-    print("\n[2/4] Generating classification report...")
-    print_classification_report(y_true, y_pred, labels)
-    
-    # Step 3: Visualization
-    print("\n[3/4] Plotting confusion matrix...")
-    plot_confusion_matrix(y_true, y_pred, labels, save_path)
-    
-    # Step 4: Export
-    print("\n[4/4] Saving results...")
-    save_results(metrics)
-    
     print("\n" + "=" * 60)
-    print("Evaluation completed successfully.")
+    print("PERFORMING LEAVE-ONE-OUT CROSS-VALIDATION")
     print("=" * 60)
     
-    return metrics
-
-
-# Local testing block
-if __name__ == "__main__":
+    # 1. Generate cross-validated predictions
+    loo = LeaveOneOut()
+    y_pred_cv = cross_val_predict(model, X, y, cv=loo)
     
-    print("=" * 60)
-    print("TESTING evaluation.py")
-    print("=" * 60)
+    # 2. Compute and print metrics
+    print("\nComputing CV metrics...")
+    metrics = calculate_metrics(y, y_pred_cv, labels)
+    for key, value in metrics.items():
+        print(f" - {key.upper()}: {value * 100:.2f}%")
     
-    y_true_test = [
-        'High', 'Medium', 'Low', 'High', 'Medium',
-        'Low', 'High', 'Medium', 'Low', 'High',
-        'Medium', 'Low', 'High', 'Medium', 'Low'
-    ]
+    # 3. Print detailed report
+    print_classification_report(y, y_pred_cv, labels)
     
-    y_pred_test = [
-        'High', 'Medium', 'Low', 'High', 'Medium',
-        'Low', 'Medium', 'Medium', 'Low', 'High',
-        'Medium', 'Low', 'High', 'Low', 'Low'
-    ]
-    
-    full_evaluation(y_true_test, y_pred_test, save_path='test_confusion_matrix.png')
-    
-    print("\nevaluation.py is ready for integration.")
-
-
-def evaluate_performance(model, X_test, y_test, labels=None):
-    """
-    Legacy function for backward compatibility with main.py.
-    Computes predictions and calls full_evaluation.
-    """
-    if labels is None:
-        labels = ['Low', 'Medium', 'High']
-    
-    y_pred = model.predict(X_test)
-    
-    print("\n" + "=" * 60)
-    print("📊 MODEL PERFORMANCE METRICS")
-    print("=" * 60)
-    
-    return full_evaluation(y_test, y_pred, labels, save_path='confusion_matrix.png')
+    # 4. Display Confusion Matrix
+    print("\nOpening Confusion Matrix window...")
+    plot_confusion_matrix(y, y_pred_cv, labels, save_path='outputs/cv_confusion_matrix.png')
