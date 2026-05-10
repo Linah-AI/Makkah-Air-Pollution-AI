@@ -41,15 +41,24 @@ def main():
 
     # 4. مرحلة التقييم (شغل خديجة)
     # ----------------------------
-    # بمجرد ما تخلص خديجة ملف evaluation.py، هذا السطر بيطلع لكم نسبة الدقة
-    try:
-        evaluation.evaluate_performance(model, X_test, y_test)
-    except AttributeError:
-        print("\n⚠️ تنبيه: كود التقييم (خديجة) لسه مو جاهز أو ناقص.. بانتظار خديجة!")
-
-    print("\n" + "="*50)
-    print("🎉 انتهت جميع العمليات بنجاح! كفو يا فريق مكة!")
-    print("="*50)
+    print("📈 جاري التقييم ورسم النتائج (شغل خديجة)...")
+    
+    # أولاً: نخلي المودل يحل الاختبار عشان نرسل إجاباته لخديجة
+    y_pred = model.predict(X_test)
+    
+    # ثانياً: نستخدم دوال خديجة الاحترافية
+    # 1. طباعة الدقة وباقي المقاييس
+    metrics = evaluation.calculate_metrics(y_test, y_pred, labels=model.classes_)
+    print("\n🎯 النتائج النهائية:")
+    for key, value in metrics.items():
+        print(f" - {key.upper()}: {value * 100:.2f}%")
+        
+    # 2. طباعة التقرير المفصل
+    evaluation.print_classification_report(y_test, y_pred, labels=model.classes_)
+    
+    # 3. رسم مصفوفة الالتباس (Confusion Matrix)
+    print("💡 ستفتح الآن نافذة جديدة تحتوي على مصفوفة الالتباس..")
+    evaluation.plot_confusion_matrix(y_test, y_pred, labels=model.classes_)
 
 if __name__ == "__main__":
     main()
